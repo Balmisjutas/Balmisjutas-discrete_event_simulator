@@ -174,7 +174,7 @@ class Engine:
         print("=== Testing Gateway ===")
 
         scheduler = Scheduler()
-        queue = Queue(capacity=5)
+        queue = Queue(capacity=2)
         server = Server("1", mu_rate=2)
         gateway = Gateway(queue, [server])
 

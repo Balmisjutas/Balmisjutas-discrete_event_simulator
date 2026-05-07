@@ -39,7 +39,9 @@ class Gateway:
                 scheduler.add_event(new_event)
 
             else:
-                self.queue.enqueue(message)
+                accepted = self.queue.enqueue(message)
+                if not accepted:
+                    print(f"  *** Message {message.get_message_id()} DROPPED - queue full! ***")
 
         # DEPT - finish and check queue
         elif event_type == EventType.MSG_DEPT:
