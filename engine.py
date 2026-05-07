@@ -138,6 +138,7 @@ class Engine:
 
         server.print_server() 
         print()
+        
     # TEST CLIENT
     def test_client(self):
         print(" Testing Client ")
@@ -167,37 +168,38 @@ class Engine:
         for _ in range(3):
             event = scheduler.get_event()
             self.generate_trace(event)
+
     # TEST GATEWAY
     def test_gateway(self):
-        print(" Testing Gateway ")
+        print("=== Testing Gateway ===")
 
         scheduler = Scheduler()
-        queue = Queue(capacity=2)
-        server = Server(server_id=1, mu_rate=2)
-
+        queue = Queue(capacity=5)
+        server = Server("1", mu_rate=2)
         gateway = Gateway(queue, [server])
 
-        # Step 1: Create initial SEND event
-        msg = Message("1", "0")
-        send_event = Event(0.0, EventType.SEND_MSG, msg)
-
-        scheduler.add_event(send_event)
+        # Create one client and schedule its first message
+        client = Client(1, lambda_rate=1)
+        client.send_message(0.0, scheduler)
 
         self.print_trace_header()
 
-        # Step 2: Process a few events manually
-        steps = 5
-        for _ in range(steps):
-            if scheduler.is_empty():
-                break
+        # Run until scheduler is empty or we hit a time limit
+        time_limit = 10.0
 
+        while not scheduler.is_empty():
             event = scheduler.get_event()
             current_time = event.get_event_time()
 
-            # Print trace
+            if current_time > time_limit:
+                break
+
             self.generate_trace(event)
 
-            # Let gateway handle it
+            # When a SEND is processed, schedule the client's next message
+            if event.get_event_type() == EventType.SEND_MSG:
+                client.send_message(current_time, scheduler)
+
             gateway.handle_event(event, scheduler, current_time)
 
         print()
