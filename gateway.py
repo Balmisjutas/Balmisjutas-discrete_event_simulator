@@ -1,63 +1,72 @@
 from event import Event, EventType
-
+from server import Server
 
 class Gateway:
-    def __init__(self, queue, servers):
+    def __init__(self, queue, n_servers, mu_rate):
         self.queue = queue
-        self.servers = servers  # list of servers
+        self.servers = [Server(str(i+1), mu_rate) for i in range(n_servers)]
+        self.total_received = 0
+        self.total_dropped = 0
+        self.total_served = 0
+        self.total_wait_time = 0.0
+        self.total_system_time = 0.0
 
-    # Find an idle server
     def get_idle_server(self):
         for server in self.servers:
             if not server.get_is_busy():
                 return server
         return None
 
-    # HANDLE EVENTS 
-    def handle_event(self, event, scheduler, current_time):
-        event_type = event.get_event_type()
-        message = event.get_message()
+    def receive_message(self, message, current_time, scheduler):
+        self.total_received += 1
+        message.set_arrival_time(current_time)
+        server = self.get_idle_server()
+        if server:
+            server.start_service(message, current_time, scheduler)
+        else:
+            accepted = self.queue.enqueue(message)
+            if not accepted:
+                self.total_dropped += 1
+                print(f"  *** Message {message.get_message_id()} DROPPED - queue full! ***")
 
-        # SEND - schedule RECV
-        if event_type == EventType.SEND_MSG:
-            recv_time = current_time + 1  # fixed delay
-            new_event = Event(recv_time, EventType.RECV_MSG, message)
-            scheduler.add_event(new_event)
+    def process_departure(self, message, current_time, scheduler):
+        server_id = message.get_source()
+        server = next(s for s in self.servers if s.get_server_id() == server_id)
+        server.finish_service()
+        self.total_served += 1
+        self.total_wait_time += message.get_service_start_time() - message.get_arrival_time()
+        if message.get_send_time() is not None:
+            self.total_system_time += current_time - message.get_send_time()
+        if not self.queue.is_empty():
+            next_msg = self.queue.dequeue()
+            server.start_service(next_msg, current_time, scheduler)
 
-        # RECV - process or queue
-        elif event_type == EventType.RECV_MSG:
-            server = self.get_idle_server()
+    def get_metrics(self):
+        avg_wait = self.total_wait_time / self.total_served if self.total_served > 0 else 0
+        avg_system = self.total_system_time / self.total_served if self.total_served > 0 else 0
+        drop_rate = self.total_dropped / self.total_received if self.total_received > 0 else 0
 
-            if server:
-                service_time = server.start_service(message)
-                dept_time = current_time + service_time
+        # aggregate service time across all servers
+        total_all_service_time = sum(s.get_total_service_time() for s in self.servers)
+        total_all_served = sum(s.get_total_messages_served() for s in self.servers)
+        avg_service_time = total_all_service_time / total_all_served if total_all_served > 0 else 0
 
-                # Update message source - now server owns it
-                message.set_source(server.get_server_id())
+        # per server breakdown
+        per_server = {
+            s.get_server_id(): {
+                "messages_served": s.get_total_messages_served(),
+                "avg_service_time": s.get_avg_service_time()
+            }
+            for s in self.servers
+        }
 
-                new_event = Event(dept_time, EventType.MSG_DEPT, message)
-                scheduler.add_event(new_event)
-
-            else:
-                accepted = self.queue.enqueue(message)
-                if not accepted:
-                    print(f"  *** Message {message.get_message_id()} DROPPED - queue full! ***")
-
-        # DEPT - finish and check queue
-        elif event_type == EventType.MSG_DEPT:
-            server_id = message.get_source()
-
-            # Find the server that was processing
-            server = next(s for s in self.servers if s.get_server_id() == server_id)
-
-            server.finish_service()
-
-            if not self.queue.is_empty():
-                next_msg = self.queue.dequeue()
-                service_time = server.start_service(next_msg)
-
-                next_msg.set_source(server.get_server_id())
-
-                dept_time = current_time + service_time
-                new_event = Event(dept_time, EventType.MSG_DEPT, next_msg)
-                scheduler.add_event(new_event)
+        return {
+            "received": self.total_received,
+            "dropped": self.total_dropped,
+            "drop_rate": drop_rate,
+            "served": self.total_served,
+            "avg_wait_time": avg_wait,
+            "avg_system_time": avg_system,
+            "avg_service_time": avg_service_time,  # across all servers
+            "per_server": per_server                # breakdown per server
+        }
