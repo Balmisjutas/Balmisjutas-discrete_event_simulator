@@ -1,3 +1,6 @@
 __pycache__/
 *.pyc
 *_backup.py
+pyproject.toml
+uv.lock
+.venv
