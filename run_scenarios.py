@@ -14,9 +14,9 @@ SCENARIOS = [
 ]
 
 LAMBDA_VALUES = [4, 6, 8, 12]
-N_RUNS = 5
+N_RUNS = 100
 SIM_TIME = 1000
-METRICS = ["received", "dropped", "avg_wait_time", "avg_system_time", "avg_service_time"]
+METRICS = ["dropped", "avg_wait_time", "avg_system_time", "avg_service_time", "avg_n_system", "avg_n_queue"]
 
 
 # 95% confidence interval using t-distribution,

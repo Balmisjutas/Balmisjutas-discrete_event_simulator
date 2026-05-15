@@ -4,3 +4,7 @@ __pycache__/
 pyproject.toml
 uv.lock
 .venv
+simulation_trace.log
+*.log
+overleaf_upload/
+lab2_report.zip
