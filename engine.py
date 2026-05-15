@@ -98,7 +98,7 @@ class Engine:
         Message._id_counter = 1
         scheduler = Scheduler()
         queue = Queue(capacity=queue_capacity)
-        gateway = Gateway(queue, n_servers, mu_rate)
+        gateway = Gateway(queue, n_servers, mu_rate, verbose=verbose)
 
         clients = [Client(i+1, lambda_rate) for i in range(n_clients)]
         for client in clients:

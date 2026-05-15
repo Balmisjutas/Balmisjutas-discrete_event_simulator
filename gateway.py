@@ -2,7 +2,7 @@ from event import Event, EventType
 from server import Server
 
 class Gateway:
-    def __init__(self, queue, n_servers, mu_rate):
+    def __init__(self, queue, n_servers, mu_rate, verbose=False):
         self.queue = queue
         self.servers = [Server(str(i+1), mu_rate) for i in range(n_servers)]
         self.total_received = 0
@@ -13,6 +13,7 @@ class Gateway:
         self.last_event_time = 0.0
         self.area_n_system = 0.0
         self.area_n_queue = 0.0
+        self.verbose = verbose
 
     def _update_areas(self, current_time):
         elapsed = current_time - self.last_event_time
@@ -41,7 +42,8 @@ class Gateway:
             accepted = self.queue.enqueue(message)
             if not accepted:
                 self.total_dropped += 1
-                print(f"  *** Message {message.get_message_id()} DROPPED - queue full! ***")
+                if self.verbose:
+                    print(f"  *** Message {message.get_message_id()} DROPPED - queue full! ***")
 
     def process_departure(self, message, current_time, scheduler):
         self._update_areas(current_time)
