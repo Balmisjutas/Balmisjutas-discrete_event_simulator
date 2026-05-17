@@ -26,8 +26,10 @@ Simulates an IoT gateway with Poisson-distributed message arrivals and exponenti
 
 | Flag | Description | Default |
 |------|-------------|---------|
+| `-h` | Show help menu with all options and examples | - |
 | `-l` | Arrival rate lambda (msg/s) | required |
 | `-m` | Service rate mu (msg/s) | required |
+| `-n` | Number of client sources | 1 |
 | `-s` | Number of servers | 1 |
 | `-q` | Queue capacity (waiting room only) | 999999 |
 | `-t` | Simulation time in seconds | 100 |
