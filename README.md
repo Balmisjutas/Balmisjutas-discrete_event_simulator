@@ -29,6 +29,11 @@ Batch runner for multiple configurations:
 python run_scenarios.py
 ```
 
+To see all available options and examples:
+```bash
+python engine.py -h
+```
+
 ## Parameters
 
 - `-l` Arrival rate (messages/second)
