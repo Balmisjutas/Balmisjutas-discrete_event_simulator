@@ -26,7 +26,7 @@ Simulates an IoT gateway with Poisson-distributed message arrivals and exponenti
 
 | Flag | Description | Default |
 |------|-------------|---------|
-| `-h` | Show help menu with all options and examples | - |
+| `-h` | Show help menu with all options and examples | none |
 | `-l` | Arrival rate lambda (msg/s) | required |
 | `-m` | Service rate mu (msg/s) | required |
 | `-n` | Number of client sources | 1 |
