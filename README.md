@@ -19,26 +19,27 @@ Simulates an IoT gateway with Poisson-distributed message arrivals and exponenti
 
 ## How to Run
 
-Single run with specified parameters:
-```bash
-python engine.py -l 4 -m 8
-```
+**Important:** Our simulator uses a flag system to set parameters manually from the runner file. Hence it is important you first run the `-h` flag to see all available options like this:
+    python engine.py -h
 
-Batch runner for multiple configurations:
-```bash
-python run_scenarios.py
-```
+### Parameters
 
-To see all available options and examples:
-```bash
-python engine.py -h
-```
+| Flag | Description | Default |
+|------|-------------|---------|
+| `-l` | Arrival rate lambda (msg/s) | required |
+| `-m` | Service rate mu (msg/s) | required |
+| `-s` | Number of servers | 1 |
+| `-q` | Queue capacity (waiting room only) | 999999 |
+| `-t` | Simulation time in seconds | 100 |
+| `-v` | Print full event trace | off |
 
-## Parameters
+### Examples
 
-- `-l` Arrival rate (messages/second)
-- `-m` Service rate (messages/second)
-- `-s` Number of servers (default: 1)
-- `-q` Queue capacity, waiting room only (default: 999999)
-- `-t` Simulation duration in seconds (default: 100)
-- `-v` Verbose event trace output
+Single run (M/M/1 infinite queue):
+    python engine.py -l 4 -m 8
+
+Single run (M/M/1/4 finite queue):
+    python engine.py -l 4 -m 8 -q 3 -t 1000
+
+Batch runner for all 4 scenarios:
+    python run_scenarios.py
